@@ -15,6 +15,7 @@ export class MapComponent implements OnInit {
 
   lat = 26.3398;
   lng = -81.7787;
+
   constructor() {}
 
   ngOnInit() {
