@@ -89,6 +89,7 @@ export class MapComponent implements OnInit {
       // The user does not have to click the polygon control button first.
       defaultMode: 'draw_polygon',
     });
+    this.map.dragPan.disable();
     this.map.addControl(draw);
   }
 
@@ -167,5 +168,41 @@ export class MapComponent implements OnInit {
 
   updateArea(e: any) {
     console.log(e.features[0]);
+    this.checkCoordinates(e.features[0]);
+  }
+
+  checkCoordinates(data) {
+    const coordinates = {
+      type: 'Polygon',
+      coordinates: [
+        [
+          [-72.01332405926594, 2.422939744658918],
+          [-72.42780859923677, 2.572908352461006],
+          [-72.42217301977338, 2.221804989282432],
+          [-72.09830702018196, 2.246795552425312],
+          [-72.01332405926594, 2.422939744658918],
+        ],
+      ],
+    };
+    const arr = coordinates.coordinates[0];
+    const llv = mapboxgl.LngLatBounds.convert(arr);
+    console.log(llv);
+    data.geometry.coordinates[0].forEach((ele) => {
+      const ll = new mapboxgl.LngLat(ele[0], ele[1]);
+      console.log(ll);
+      if (llv.contains(ll)) {
+        console.log('true', ll);
+      } else {
+        console.log('false', ll);
+      }
+    });
+    // const llb = new mapboxgl.LngLatBounds(
+    //   new mapboxgl.LngLat(-73.9876, 40.7661),
+    //   new mapboxgl.LngLat(-73.9397, 40.8002)
+    //   );
+
+    //   const ll = new mapboxgl.LngLat(-73.9567, 40.7789);
+
+    //   console.log(llb.contains(ll)); // = true
   }
 }
