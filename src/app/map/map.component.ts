@@ -31,28 +31,6 @@ export class MapComponent implements OnInit {
 
     // Add map controls
     this.map.addControl(new mapboxgl.NavigationControl());
-
-    // this.map.on('load', () => {
-    //   this.map.addSource('radar', {
-    //     type: 'image',
-    //     url: 'https://docs.mapbox.com/mapbox-gl-js/assets/radar.gif',
-    //     coordinates: [
-    //       [-80.425, 46.437],
-    //       [-71.516, 46.437],
-    //       [-71.516, 37.936],
-    //       [-80.425, 37.936],
-    //     ],
-    //   });
-    //   this.map.addLayer({
-    //     id: 'radar-layer',
-    //     type: 'raster',
-    //     source: 'radar',
-    //     paint: {
-    //       'raster-fade-duration': 0,
-    //     },
-    //   });
-    // });
-
     const southWest = new mapboxgl.LngLat(this.lng, this.lat);
     const northEast = new mapboxgl.LngLat(this.lng + 2, this.lat + 2);
     const boundingBox = new mapboxgl.LngLatBounds(southWest, northEast);
@@ -89,7 +67,6 @@ export class MapComponent implements OnInit {
       // The user does not have to click the polygon control button first.
       defaultMode: 'draw_polygon',
     });
-    this.map.dragPan.disable();
     this.map.addControl(draw);
   }
 
@@ -119,17 +96,18 @@ export class MapComponent implements OnInit {
     });
 
     // fill the area
-    this.map.addLayer({
-      id: this.fillAreaName,
-      type: 'fill',
-      source: 'radar',
-      paint: {
-        'fill-color': '#FFD742',
-        'fill-opacity': 0.5,
-      },
-    });
+    // this.map.addLayer({
+    //   id: this.fillAreaName,
+    //   type: 'fill',
+    //   source: 'radar',
+    //   paint: {
+    //     'fill-color': '#FFD742',
+    //     'fill-opacity': 0.5,
+    //   },
+    // });
 
     // Add an outline around the polygon.
+    // user should draw new polygon with this boundary only
     this.map.addLayer({
       id: this.outlineName,
       type: 'line',
@@ -164,14 +142,19 @@ export class MapComponent implements OnInit {
     this.map.on('draw.delete', (e) => this.updateArea(e));
     this.map.on('draw.update', (e) => this.updateArea(e));
     this.map.addControl(draw);
+    // Adding click event just after draw mode is active
+    this.map.on('click', (e) => {
+      this.checkCoordinates(e.lngLat);
+    });
   }
 
+  // use this function to calculate new added boundaries
   updateArea(e: any) {
-    console.log(e.features[0]);
-    this.checkCoordinates(e.features[0]);
+    //console.log(e.features[0]);
   }
 
   checkCoordinates(data) {
+    // parent region and user is allowed to draw only with-in this region
     const coordinates = {
       type: 'Polygon',
       coordinates: [
@@ -185,24 +168,14 @@ export class MapComponent implements OnInit {
       ],
     };
     const arr = coordinates.coordinates[0];
+
+    // using 0th index and 1st index coordinates for bounding because
+    //  the first coordinate pair referring to the southwestern corner of the box (the minimum longitude and latitude) and the second referring to the northeastern corner of the box (the maximum longitude and latitude).
+    // reference Link -> https://docs.mapbox.com/help/glossary/bounding-box/
+    const boundingBox = new mapboxgl.LngLatBounds(arr[0], arr[1]);
+    console.log('bounding-box result', boundingBox.contains(data));
+
     const llv = mapboxgl.LngLatBounds.convert(arr);
-    console.log(llv);
-    data.geometry.coordinates[0].forEach((ele) => {
-      const ll = new mapboxgl.LngLat(ele[0], ele[1]);
-      console.log(ll);
-      if (llv.contains(ll)) {
-        console.log('true', ll);
-      } else {
-        console.log('false', ll);
-      }
-    });
-    // const llb = new mapboxgl.LngLatBounds(
-    //   new mapboxgl.LngLat(-73.9876, 40.7661),
-    //   new mapboxgl.LngLat(-73.9397, 40.8002)
-    //   );
-
-    //   const ll = new mapboxgl.LngLat(-73.9567, 40.7789);
-
-    //   console.log(llb.contains(ll)); // = true
+    console.log('array result', llv.contains(data));
   }
 }
